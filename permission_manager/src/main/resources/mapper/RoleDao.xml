@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenshiheng.permission.dao.RoleDao">
+    
+	<resultMap type="Role" id="roleResult">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <result property="group" column="group" />
+        <collection property="roleAndPermissions" ofType="RoleAndPermission">
+            <id property="roleId" column="rap_role_id" />
+            <id property="permissionId" column="permission_id" />
+            <result property="visit" column="rap_visit" />
+            <result property="add" column="rap_add" />
+            <result property="update" column="rap_update" />
+            <result property="delete" column="rap_delete" />
+            <association property="permission" javaType="Permission">
+                <id property="id" column="permission_id" />
+           		<result property="name" column="permission_name" />
+            	<result property="group" column="permission_group" />
+            </association>
+        </collection>
+    </resultMap>
+    
+    <insert id="add" parameterType="Role" keyProperty="id">
+        insert into pm_role(`name`,`group`) values(#{name},#{group,jdbcType=VARCHAR})
+    </insert>
+    
+    <insert id="addMore" parameterType="map" keyProperty="id">
+        insert into pm_role(`name`,`group`) 
+        values 
+        <foreach item="item" collection="list" separator=",">
+            (#{item.name},#{item.group,jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+    
+    <select id="queryListByPage" parameterType="map" resultMap="roleResult">
+        SELECT a.`id`,
+        a.`name`,
+		a.`group`,
+		c.`id` "permission_id",
+		c.`name` "permission_name",
+		c.`group` "permission_group",
+		b.`role_id` "rap_role_id",
+		b.`permission_id` "rap_permission_id",
+		b.`visit` "rap_visit",
+		b.`add` "rap_add",
+		b.`update` "rap_update",
+		b.`delete` "rap_delete"
+		FROM (pm_role a 
+		LEFT JOIN pm_role_permission b ON a.id=b.role_id) 
+		LEFT JOIN pm_permission c ON b.permission_id=c.id 
+		<if test="role != null">
+		    <where>
+			    <if test="role.name != null &amp;&amp; !role.name.equals('')">
+		        	a.`name` like CONCAT('%',#{role.name},'%') 
+		    	</if>
+		    	<if test="role.group != null &amp;&amp; !role.group.equals('')">
+		        	OR a.`group` like CONCAT('%',#{role.group},'%') 
+		    	</if>
+			</where> 
+		</if>
+		ORDER BY a.`id`
+    </select>
+    
+    <select id="getList" resultMap="roleResult">
+        SELECT a.`id`,
+        a.`name`,
+		a.`group`,
+		c.`id` "permission_id",
+		c.`name` "permission_name",
+		c.`group` "permission_group",
+		b.`role_id` "rap_role_id",
+		b.`permission_id` "rap_permission_id",
+		b.`visit` "rap_visit",
+		b.`add` "rap_add",
+		b.`update` "rap_update",
+		b.`delete` "rap_delete"
+		FROM (pm_role a 
+		LEFT JOIN pm_role_permission b ON a.id=b.role_id) 
+		LEFT JOIN pm_permission c ON b.permission_id=c.id 
+		ORDER BY a.`id`
+    </select>
+    
+    <select id="findById" parameterType="int" resultMap="roleResult">
+        SELECT a.`id`,
+        a.`name`,
+		a.`group`,
+		c.`id` "permission_id",
+		c.`name` "permission_name",
+		c.`group` "permission_group",
+		b.`role_id` "rap_role_id",
+		b.`permission_id` "rap_permission_id",
+		b.`visit` "rap_visit",
+		b.`add` "rap_add",
+		b.`update` "rap_update",
+		b.`delete` "rap_delete"
+		FROM (pm_role a 
+		LEFT JOIN pm_role_permission b ON a.id=b.role_id) 
+		LEFT JOIN pm_permission c ON b.permission_id=c.id 
+		WHERE a.id=#{_parameter}
+    </select>
+    
+    <update id="update" parameterType="Role">
+        UPDATE pm_role 
+        SET `name`=#{name},
+        `group`=#{group,jdbcType=VARCHAR}
+        WHERE `id`=#{id}
+    </update>
+    
+    <delete id="delete" parameterType="int">
+        DELETE FROM pm_role WHERE id=#{_parameter}
+    </delete>
+    
+    <delete id="deleteMore" parameterType="list">
+        DELETE FROM pm_role WHERE id IN ( 
+        <foreach item="id" collection="list" separator=",">
+            #{id}
+        </foreach> 
+        )
+    </delete>
+</mapper>

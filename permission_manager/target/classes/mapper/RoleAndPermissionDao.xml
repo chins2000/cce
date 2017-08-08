@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenshiheng.permission.dao.RoleAndPermissionDao">
+    
+    <insert id="add" parameterType="RoleAndPermission">
+        insert into pm_role_permission(role_id,permission_id,`visit`,`add`,`update`,`delete`) values(#{roleId},#{permission.id},#{visit},#{add},#{update},#{delete})
+    </insert>
+    
+    <insert id="addMore" parameterType="list">
+        insert into pm_role_permission(role_id,permission_id,`visit`,`add`,`update`,`delete`) 
+        values 
+        <foreach item="item" collection="list" separator=",">
+            (#{item.roleId},#{item.permission.id},#{item.visit},#{item.add},#{item.update},#{item.delete})
+        </foreach>
+    </insert>
+    
+    <update id="update" parameterType="RoleAndPermission">
+        UPDATE pm_role_permission 
+        SET 
+        `visit`=#{visit},
+        `add`=#{add},
+        `update`=#{update},
+        `delete`=#{delete}
+        WHERE `role_id`=#{roleId} and `permission_id`=#{permission.id}
+    </update>
+    
+    <delete id="delete" parameterType="RoleAndPermission">
+        DELETE FROM pm_role_permission WHERE role_id=#{roleId} and permission_id=#{permission.id}
+    </delete>
+    
+    <delete id="deleteMore" parameterType="list">
+        DELETE FROM pm_role_permission WHERE 
+        <foreach item="item" collection="list" separator=" or ">
+            (role_id=#{item.roleId} and permission_id=#{item.permission.id})
+        </foreach> 
+    </delete>
+</mapper>

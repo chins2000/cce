@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenshiheng.permission.dao.UserDao">
+    
+    <resultMap type="User" id="userResult">
+        <id property="id" column="id" />
+        <result property="username" column="username" />
+        <result property="password" column="password" />
+        <collection property="roles" ofType="Role">
+            <id property="id" column="role_id" />
+            <result property="name" column="role_name" />
+            <result property="group" column="role_group" />
+        </collection>
+    </resultMap>
+    
+    <resultMap type="User" id="loginResult">
+        <id property="id" column="id" />
+        <result property="username" column="username" />
+        <result property="password" column="password" />
+        <collection property="roles" ofType="Role">
+            <id property="id" column="role_id" />
+            <result property="name" column="role_name" />
+            <result property="group" column="role_group" />
+            <collection property="roleAndPermissions" ofType="RoleAndPermission">
+                <id property="roleId" column="roleAndPermission_role_id" />
+                <id property="permissionId" column="permission_id" />
+                <result property="visit" column="roleAndPermission_visit" />
+            	<result property="add" column="roleAndPermission_add" />
+           		<result property="update" column="roleAndPermission_update" />
+            	<result property="delete" column="roleAndPermission_delete" />
+            	<association property="permission" javaType="Permission">
+            	    <id property="id" column="permission_id" />
+            		<result property="name" column="permission_name" />
+            		<result property="group" column="permission_group" />
+            	</association>
+            </collection>
+        </collection>
+    </resultMap>
+    
+    <insert id="add" parameterType="User" keyProperty="id">
+        insert into sys_user(`username`,`password`) values(#{username},#{password})
+    </insert>
+    
+    <insert id="addMore" parameterType="map" keyProperty="id">
+        insert into sys_user(`username`,`password`) 
+        values 
+        <foreach item="item" collection="list" separator=",">
+            (#{item.username},#{item.password})
+        </foreach>
+    </insert>
+    
+    <select id="login" parameterType="User" resultMap="loginResult">
+        SELECT a.`id`,
+        a.`username`,
+		a.`password`,
+		c.`id` "role_id",
+		c.`name` "role_name",
+		c.`group` "role_group",
+		d.`role_id` "roleAndPermission_role_id",
+		d.`visit` "roleAndPermission_visit",
+		d.`add` "roleAndPermission_add",
+		d.`update` "roleAndPermission_update",
+		d.`delete` "roleAndPermission_delete", 
+		e.`id` "permission_id",
+		e.`name` "permission_name",
+		e.`group` "permission_group" 
+		FROM (((sys_user a 
+		LEFT JOIN sys_user_role b ON a.id=b.user_id) 
+		LEFT JOIN pm_role c ON b.role_id=c.id )
+		LEFT JOIN pm_role_permission d ON c.id=d.role_id )
+		LEFT JOIN pm_permission e ON d.permission_id=e.id 
+		WHERE a.`username` = #{username} 
+		AND a.`password` = #{password} 
+    </select>
+    
+    <select id="queryListByPage" parameterType="map" resultMap="userResult">
+        SELECT a.`id`,
+        a.`username`,
+		a.`password`,
+		c.`id` "role_id",
+		c.`name` "role_name",
+		c.`group` "role_group" 
+		FROM (sys_user a 
+		LEFT JOIN sys_user_role b ON a.id=b.user_id) 
+		LEFT JOIN pm_role c ON b.role_id=c.id 
+		<if test="user != null">
+		    <where>
+			    <if test="user.username!=null &amp;&amp; !user.username.equals('')">
+		        	a.`username` like CONCAT('%',#{user.username},'%') 
+		    	</if>
+		    	<if test="user.password!=null &amp;&amp; !user.password.equals('')">
+		        	OR a.`password` like CONCAT('%',#{user.password},'%') 
+		    	</if>
+			</where> 
+		</if>
+		ORDER BY a.`id`
+    </select>
+    
+    <select id="getList" resultMap="userResult">
+        SELECT a.`id`,
+        a.`username`,
+		a.`password`,
+		c.`id` "role_id",
+		c.`name` "role_name",
+		c.`group` "role_group" 
+		FROM (sys_user a 
+		LEFT JOIN sys_user_role b ON a.id=b.user_id) 
+		LEFT JOIN pm_role c ON b.role_id=c.id 
+		ORDER BY a.`id`
+    </select>
+    
+    <select id="findById" parameterType="int" resultMap="userResult">
+        SELECT a.`id`,
+        a.`username`,
+		a.`password`,
+		c.`id` "role_id",
+		c.`name` "role_name",
+		c.`group` "role_group" 
+		FROM (sys_user a 
+		LEFT JOIN sys_user_role b ON a.id=b.user_id) 
+		LEFT JOIN pm_role c ON b.role_id=c.id
+		WHERE a.id=#{_parameter}
+    </select>
+    
+    <update id="update" parameterType="User">
+        UPDATE sys_user 
+        SET sys_user.`password`=#{password}
+        WHERE sys_user.`id`=#{id}
+    </update>
+    
+    <delete id="delete" parameterType="int">
+        DELETE FROM sys_user WHERE id=#{_parameter}
+    </delete>
+    
+    <delete id="deleteMore" parameterType="list">
+        DELETE FROM sys_user WHERE id IN ( 
+        <foreach item="id" collection="list" separator=",">
+            #{id}
+        </foreach> 
+        )
+    </delete>
+    
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenshiheng.permission.dao.MenuDao">
+    <insert id="add" parameterType="Menu" keyProperty="id">
+        insert into pm_menu(`url`,`name`,`pid`,`pm_permission_id`) 
+        values(#{url},#{name},#{pid},#{permissionId})
+    </insert>
+    
+    <insert id="addMore" parameterType="map" useGeneratedKeys="true"
+         keyProperty="id">
+        insert into pm_menu(`url`,`name`,`pid`,`pm_permission_id`) 
+        values 
+        <foreach item="item" collection="list" separator=",">
+            (#{item.url},#{item.name},#{item.pid},#{item.permissionId})
+        </foreach>
+    </insert>
+    
+    <select id="queryListByPage" parameterType="map" resultType="Menu">
+        SELECT `id`,`url`,`name`,`pid`,`pm_permission_id` permission_id 
+		FROM pm_menu
+		<if test="menu != null">
+		    <where>
+			    <if test="menu.name != null &amp;&amp; !menu.name.equals('')">
+		        	`name` like CONCAT('%',#{menu.name},'%') 
+		    	</if>
+			</where> 
+		</if>
+		ORDER BY `id`
+    </select>
+    
+    <select id="queryListByPid" parameterType="int" resultType="Menu">
+        SELECT `id`,`url`,`name`,`pid`,`pm_permission_id` permission_id 
+		FROM pm_menu
+		WHERE pid = ${_parameter}
+		ORDER BY `id`
+    </select>
+    
+    <select id="queryListByPerId" parameterType="list" resultType="Menu">
+        SELECT `id`,`url`,`name`,`pid`,`pm_permission_id` permission_id 
+		FROM pm_menu
+		WHERE pm_permission_id in (
+		<foreach collection="list" item="item" separator=",">
+		    ${item}
+		</foreach>
+		)
+		ORDER BY `id`
+    </select>
+    
+    <select id="getList" resultType="Menu">
+        SELECT `id`,`url`,`name`,`pid`,`pm_permission_id` permission_id 
+		FROM pm_menu
+		ORDER BY `id`
+    </select>
+    
+    <select id="findById" parameterType="int" resultType="Menu">
+        SELECT `id`,`url`,`name`,`pid`,`pm_permission_id` permission_id 
+        FROM pm_menu 
+		WHERE id=#{_parameter}
+    </select>
+    
+    <update id="update" parameterType="Menu">
+        UPDATE pm_menu 
+        SET `url`=#{url},
+        `name`=#{name},
+        `pid`=#{pid},
+        `pm_permission_id`=#{permissionId}
+        WHERE id=#{id}
+    </update>
+    
+    <delete id="delete" parameterType="int">
+        DELETE FROM pm_menu WHERE id=#{_parameter}
+    </delete>
+    
+    <delete id="deleteMore" parameterType="list">
+        DELETE FROM pm_menu WHERE id IN ( 
+        <foreach item="id" collection="list" separator=",">
+            #{id}
+        </foreach> 
+        )
+    </delete>
+</mapper>

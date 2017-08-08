@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chenshiheng.permission.dao.PermissionDao">
+    <insert id="add" parameterType="Permission" keyProperty="id">
+        insert into pm_permission(`name`,`group`) 
+        values(#{name},#{group,jdbcType=VARCHAR})
+    </insert>
+    
+    <insert id="addMore" parameterType="map" useGeneratedKeys="true"
+         keyProperty="id">
+        insert into pm_permission(`name`,`group`) 
+        values 
+        <foreach item="item" collection="list" separator=",">
+            (#{item.name},#{item.group,jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+    
+    <select id="queryListByPage" parameterType="map" resultType="Permission">
+        SELECT * 
+		FROM pm_permission
+		<if test="permission != null">
+		    <where>
+			    <if test="permission.name != null &amp;&amp; !permission.name.equals('')">
+		        	`name` like CONCAT('%',#{permission.name},'%') 
+		    	</if>
+		    	<if test="permission.group != null &amp;&amp; !permission.group.equals('')">
+		        	OR `group` like CONCAT('%',#{permission.group},'%') 
+		    	</if>
+			</where>
+		</if>
+		ORDER BY `id`
+    </select>
+    
+    <select id="getList" resultType="Permission">
+        SELECT * 
+		FROM pm_permission
+		ORDER BY `id`
+    </select>
+    
+    <select id="findById" parameterType="int" resultType="Permission">
+        SELECT * 
+        FROM pm_permission 
+		WHERE id=#{_parameter}
+    </select>
+    
+    <update id="update" parameterType="Permission">
+        UPDATE pm_permission 
+        SET `name`=#{name},
+        `group`=#{group,jdbcType=VARCHAR}
+        WHERE id=#{id}
+    </update>
+    
+    <delete id="delete" parameterType="int">
+        DELETE FROM pm_permission WHERE id=#{_parameter}
+    </delete>
+    
+    <delete id="deleteMore" parameterType="list">
+        DELETE FROM pm_permission WHERE id IN ( 
+        <foreach item="id" collection="list" separator=",">
+            #{id}
+        </foreach> 
+        )
+    </delete>
+</mapper>
